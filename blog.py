@@ -342,7 +342,9 @@ posts = blogPostDAO.BlogPostDAO(database)
 users = userDAO.UserDAO(database)
 sessions = sessionDAO.SessionDAO(database)
 
+def application(environ, start_response):
+    return bottle.default_app().wsgi(environ,start_response)
 
-bottle.debug(True)
-bottle.run(host='localhost')
-#bottle.run(host='localhost', port=8082)         # Start the webserver running and wait for requests
+if __name__ == "__main__":
+    bottle.debug(True)
+    run(reloader=True)
