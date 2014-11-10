@@ -335,7 +335,9 @@ def convert_utc_to_formatted_pt(utc_timestamp):
 
 
 connection = pymongo.mongo_client.MongoClient(os.environ['OPENSHIFT_MONGODB_DB_HOST'], int(os.environ['OPENSHIFT_MONGODB_DB_PORT']))
-database = connection.blog
+mongo_db = connection[os.environ['OPENSHIFT_APP_NAME']]
+mongo_db.authenticate(os.environ['OPENSHIFT_MONGODB_DB_USERNAME'],os.environ['OPENSHIFT_MONGODB_DB_PASSWORD'])
+database = mongo_db.blog
 
 posts = blogPostDAO.BlogPostDAO(database)
 users = userDAO.UserDAO(database)
