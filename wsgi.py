@@ -10,4 +10,4 @@ except IOError:
     pass
 
 import bottle
-application = bottle.default_app()
+bottle = bottle.default_app()

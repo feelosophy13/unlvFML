@@ -346,4 +346,4 @@ def application(environ, start_response):
 
 if __name__ == "__main__":
     bottle.debug(True)
-    run(reloader=True)
+    bottle.run(host='localhost')
