@@ -1,3 +1,4 @@
+import os
 import pymongo
 import blogPostDAO
 import sessionDAO
@@ -22,7 +23,7 @@ def like():
         return
 
     # process like
-    return 'success'        
+    return 'success'
 
 
 @bottle.post('/unlike_post')
@@ -74,16 +75,16 @@ def serve_static(filename):
 def main_page(page_num = 1):  # by default, page_num = 1
     cookie = bottle.request.get_cookie("session")
     username = sessions.get_username(cookie)
-    
+
     n_posts_per_page = 10
     l = posts.get_posts(n_posts_per_page, page_num)
     previous_page_exists = posts.previous_page_exists(page_num)
     next_page_exists = posts.next_page_exists(n_posts_per_page, page_num)
     previous_page_num = page_num - 1
     next_page_num = page_num + 1
-    
-    return bottle.template('main', dict(myposts=l, username=username, 
-                                        page_num=page_num, 
+
+    return bottle.template('main', dict(myposts=l, username=username,
+                                        page_num=page_num,
                                         previous_page_exists=previous_page_exists,
                                         next_page_exists=next_page_exists,
                                         previous_page_num=previous_page_num,
@@ -103,7 +104,7 @@ def show_post(permalink="notfound"):
 
     # init comment form field for additional comment
     newCommentBody = ""
-    
+
     # format comment timestamps
     if len(post['c']) > 0:  # if there is at least one comment inside a post
         comments = []
@@ -129,7 +130,7 @@ def post_new_comment():
     # if user is not logged in (which she/he should be since only logged-in users can submit comments)
     if username is None:
         bottle.redirect('/login')
-    
+
     # if post not found, redirect to post not found error
     if post is None:
         bottle.redirect("/post_not_found")
@@ -138,11 +139,11 @@ def post_new_comment():
     if body == "" or len(body) > 400:
         comment = {'username': username, 'body': ""}
         errors = "What are you doing? No funny business is allowed here!"
-        return bottle.template("entry_template", 
+        return bottle.template("entry_template",
                                dict(post=post, username=username, errors=errors, comment=comment))
 
     else:  # if it all looks good
-        # obtain a timestamp 
+        # obtain a timestamp
         utc_timestamp = datetime.datetime.utcnow()  # obtain timestamp in UTC
 
         # escape, strip left and right ends, and put paragraph breaks in the comment body
@@ -150,7 +151,7 @@ def post_new_comment():
         body = body.strip()
         newline = re.compile('\r?\n')
         body = newline.sub("<p>", body)
-                
+
         # insert and redirect
         posts.add_comment(permalink, username, body, utc_timestamp)
         bottle.redirect("/post/" + permalink)
@@ -163,7 +164,7 @@ def get_newpost():
     username = sessions.get_username(cookie)  # see if user is logged in
     if username is None:
         bottle.redirect('/login')
-	    # return bottle.template("newpost_template", dict(body = "", errors="", username="Anonymous"))
+            # return bottle.template("newpost_template", dict(body = "", errors="", username="Anonymous"))
 
     return bottle.template("newpost_template", dict(body = "", errors="", username=username))
 
@@ -176,7 +177,7 @@ def post_newpost():
     cookie = bottle.request.get_cookie("session")
     username = sessions.get_username(cookie)  # see if user is logged in
     if username is None:
-    	username = "Anonymous"
+        username = "Anonymous"
 
     if post == "":
         errors = "You can't submit a blank post, dummy! :P"
@@ -184,7 +185,7 @@ def post_newpost():
                                                         body="", errors=errors))
     if len(post) > 800:
         bottle.redirect('/')
-    
+
     ## if all looks good
     escaped_post = cgi.escape(post, quote=True)  # escape the post
     escaped_post = escaped_post.strip()  # strip left and right ends
@@ -200,7 +201,7 @@ def post_newpost():
 @bottle.get('/signup')
 def present_signup():
     cookie = bottle.request.get_cookie("session")
-    username = sessions.get_username(cookie) 
+    username = sessions.get_username(cookie)
     if username:
         bottle.redirect("/")
 
@@ -239,9 +240,9 @@ def process_signup():
 @bottle.get('/login')
 def present_login():
     cookie = bottle.request.get_cookie("session")
-    username = sessions.get_username(cookie) 
+    username = sessions.get_username(cookie)
     if username:
-		bottle.redirect("/")
+        bottle.redirect("/")
     return bottle.template("login",
                            dict(username="", email="", password="",
                                 email_error="", match_error=""))
@@ -334,8 +335,7 @@ def convert_utc_to_formatted_pt(utc_timestamp):
     return pt_timestamp_formatted
 
 
-connection_string = "mongodb://localhost"
-connection = pymongo.MongoClient(connection_string)
+connection = pymongo.mongo_client.MongoClient(os.environ['OPENSHIFT_MONGODB_DB_HOST'], int(os.environ['OPENSHIFT_MONGODB_DB_PORT']))
 database = connection.blog
 
 posts = blogPostDAO.BlogPostDAO(database)
@@ -346,4 +346,3 @@ sessions = sessionDAO.SessionDAO(database)
 bottle.debug(True)
 bottle.run(host='localhost')
 #bottle.run(host='localhost', port=8082)         # Start the webserver running and wait for requests
-
