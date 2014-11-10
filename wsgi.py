@@ -9,5 +9,5 @@ try:
 except IOError:
     pass
 
-import bottle
-bottle = bottle.default_app()
+from blog import application
+application = bottle.default_app()
